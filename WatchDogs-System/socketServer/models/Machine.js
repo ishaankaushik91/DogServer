@@ -35,6 +35,6 @@ const machineSchema = new mongoose.Schema({
         type: String,
         unique: true
     }
-})
+});
 
 export default mongoose.model("Machine", machineSchema, "machines");

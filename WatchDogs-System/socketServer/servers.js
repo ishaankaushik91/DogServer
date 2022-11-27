@@ -8,6 +8,8 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import JWT from "jsonwebtoken";
 import socketMain from "./socketMain.js";
+import CryptoJS from "crypto-js";
+import Tokens from "./models/Token.js";
 
 const port = 8000;
 
@@ -66,22 +68,47 @@ if (cluster.isPrimary) {
     });
 
     // API for token based on wether the client is UI or a dog server
-    app.get("/genTok", async (req, res) => {
+    app.use(express.json());
+    app.post("/genTok", async (req, res) => {
         try {
-            
-            let token;
-            
-            if (req.body.clientType == "UI")
+
+            if (!req.body.clientType || !req.body.macA) return res.send("Missing Fields");
+
+            // If macA is already there then check in clientTokens for token
+            // associated with macA & throw same one
+            let token, macA = await Tokens.find({});
+
+            let inUiClient = SearchMacA(req.body.macA, macA[0].uiClientTokens);
+            if (inUiClient != -1)
+            {
+                res.send(macA[0].uiClientTokens[inUiClient].key);
+                return;
+            }
+
+            let inDogClient = SearchMacA(req.body.macA, macA[0].dogClientTokens);
+            if (inDogClient != -1)
+            {
+                res.send(macA[0].dogClientTokens[inDogClient].key);
+                return;
+            }
+
+            if (req.body.clientType == "ui")
             {
                 token = JWT.sign({
-                    data: 'UI'
-                  }, 'secret', { expiresIn: 60 * 60 });
+                    data: makeid(15)
+                  }, 'WATCHDOG', { expiresIn: 60 * 60 });
+
+                let tokens = await Tokens.find({});
+                tokens[0].uiClientTokens.push({key : token, macA : req.body.macA});
+                await tokens[0].save();
             }
             else
             {
-                token = JWT.sign({
-                    data: 'dog'
-                  }, 'secret', { expiresIn: 60 * 60 });
+                token = makeid(15);
+                token = CryptoJS.AES.encrypt(token, 'WATCHDOG').toString();
+                let tokens = await Tokens.find({});
+                tokens[0].dogClientTokens.push({key : token, macA : req.body.macA});
+                await tokens[0].save();
             }
 
             res.send(token);
@@ -110,4 +137,27 @@ if (cluster.isPrimary) {
 
         connection.resume();
     });
+}
+
+function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
+function SearchMacA(macA, array)
+{
+    for (let i = 0; i < array.length; i++)
+    {
+        if (array[i].macA == macA)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }

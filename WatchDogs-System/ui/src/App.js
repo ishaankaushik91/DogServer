@@ -13,16 +13,15 @@ function App() {
 
         // Add proxy and make a get request with sending the clientType object
         // Client has to be either [UI] or [dog] to recieve respective token
-        let token = axios.get();
+        let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiMFVremlIS1F1SmNxcmVYIiwiaWF0IjoxNjY5MzA3NTc1LCJleHAiOjE2NjkzMTExNzV9.cILqbJfTkrAWbfRVkzltL4Ab5SjNvaHHboy5ZgPKvDs";
         
-        const socket = io.connect("http://localhost:8000");
+        const socket = io.connect("http://103.83.137.87");
         socket.emit('clientAuth', token);
 
         // CPU info.
         socket.on("data", (data) => {
       
-          setPerformanceData(data);
-          setKeys(Object.keys(data));
+          console.log(data);
     
         });
 
@@ -35,12 +34,9 @@ function App() {
   }, []);
   return (
     <>
-      {keys.map((ele, index) => {
-        return 
-        <p keys={index}>
-          ele : {performanceData.ele}
-        </p>
-      })}
+      <h1>
+        CS Project
+      </h1>
     </>
   );
 }

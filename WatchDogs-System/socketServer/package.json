@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@socket.io/redis-adapter": "^7.2.0",
+    "crypto-js": "^4.1.1",
     "express": "^4.18.2",
     "farmhash": "^3.2.2",
     "ioredis": "^5.2.4",

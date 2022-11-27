@@ -16,7 +16,7 @@ socket.on("connect", async () => {
 
 
   //Client Auth
-  socket.emit("clientAuth", "1123ffvzcv");
+  socket.emit("clientAuth", "U2FsdGVkX1/J+c+Rtrv2THm1o9sIVR2Thwq/4MY4jV0=");
 
 
   socket.emit("initPerfData", await initPerfData());
